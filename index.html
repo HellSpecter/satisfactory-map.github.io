@@ -1,135 +1,210 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>Satisfactory Map</title>
-  <style>
-    body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
-    #map-container {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background: #000;
-    }
-    #map {
-      position: absolute;
-      transform-origin: 0 0;
-      /* Не задаем ширину - управляем через transform */
-    }
-    .checkpoint {
-      position: absolute;
-      background: red;
-      border-radius: 50%;
-      transform: translate(-50%, -50%);
-      cursor: pointer;
-      /* Рассчитываем размер относительно scale (20px при zoom=1) */
-    }
-    /* Кастомная подсказка вместо стандартного title (лучше выглядит) */
-    .checkpoint:hover::after {
-      content: attr(data-tooltip);
-      position: absolute;
-      bottom: 100%;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #333;
-      color: white;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-family: sans-serif;
-      font-size: 12px;
-      white-space: nowrap;
-      margin-bottom: 5px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Satisfactory Map Viewer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+
+        #viewer-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background: #2c2c2c;
+        }
+
+        #map-wrapper {
+            position: absolute;
+            transition: transform 0.05s;
+        }
+
+        #map-image {
+            display: block;
+            width: 5112px;
+            height: 5112px;
+        }
+
+        .checkpoint {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: rgba(255, 50, 50, 0.8);
+            border: 3px solid gold;
+            cursor: pointer;
+            transform: translate(-50%, -50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
+            z-index: 10;
+            transition: transform 0.2s;
+        }
+
+        .checkpoint:hover {
+            transform: translate(-50%, -50%) scale(1.2);
+        }
+
+        .tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            white-space: nowrap;
+            z-index: 20;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            transform: translate(-50%, -100%);
+            margin-top: -10px;
+        }
+
+        .checkpoint:hover + .tooltip {
+            opacity: 1;
+        }
+    </style>
 </head>
 <body>
-  <div id="map-container">
-    <img src="images/map.jpg" id="map">
-    <!-- Координаты: x=1024 y=1212 и x=1869 y=788 (реальные пиксели карты) -->
-    <div class="checkpoint" data-x="1024" data-y="1212" data-tooltip="Заглушка 1 (Generator Zone)"></div>
-    <div class="checkpoint" data-x="1869" data-y="788" data-tooltip="Заглушка 2 (Assembly Line Start)"></div>
-  </div>
-
-  <script>
-    // Настройки (соответствуют вашим параметрам)
-    const MAP_SIZE = 5112;
-    const MIN_SCALE = 0.5;
-    const MAX_SCALE = 8;
-    
-    const container = document.getElementById('map-container');
-    const map = document.getElementById('map');
-    const checkpoints = document.querySelectorAll('.checkpoint');
-    
-    let scale = 1;
-    let positionX = 0;
-    let positionY = 0;
-
-    // Центрируем карту при загрузке (ключевой момент!)
-    window.addEventListener('load', () => {
-      positionX = (container.offsetWidth / 2) - MAP_SIZE / 2;
-      positionY = (container.offsetHeight / 2) - MAP_SIZE / 2;
-      updatePositions();
-    });
-
-    // Колесико мыши (с зумом вокруг точки мыши)
-    container.addEventListener('wheel', e => {
-      e.preventDefault();
-      const rect = container.getBoundingClientRect();
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
-      
-      const oldScale = scale;
-      scale *= e.deltaY > 0 ? 0.92 : 1.08;
-      scale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale));
-      
-      // Критически важно: корректируем позицию для зума "в точку"
-      positionX = mouseX - (mouseX - positionX) * (scale / oldScale);
-      positionY = mouseY - (mouseY - positionY) * (scale / oldScale);
-      
-      updatePositions();
-    });
-
-    // Перемещение ЛКМ
-    let isDragging = false;
-    container.addEventListener('mousedown', e => {
-      if (e.button !== 0) return; // Только ЛКМ
-      isDragging = true;
-      lastMouse = { x: e.clientX, y: e.clientY };
-    });
-
-    document.addEventListener('mousemove', e => {
-      if (!isDragging) return;
-      
-      const deltaX = e.clientX - lastMouse.x;
-      const deltaY = e.clientY - lastMouse.y;
-      
-      positionX -= deltaX / scale;
-      positionY -= deltaY / scale;
-      
-      lastMouse = { x: e.clientX, y: e.clientY };
-      updatePositions();
-    });
-
-    document.addEventListener('mouseup', () => isDragging = false);
-
-    function updatePositions() {
-      // Обновляем изображение
-      map.style.transform = `translate(${positionX}px, ${positionY}px) scale(${scale})`;
-      
-      // Обновляем чекбоксы (главная сложность!)
-      checkpoints.forEach(cp => {
-        const x = parseFloat(cp.dataset.x);
-        const y = parseFloat(cp.dataset.y);
+    <div id="viewer-container">
+        <div id="map-wrapper">
+            <img id="map-image" src="images/map.jpg" alt="Satisfactory Map">
+        </div>
         
-        cp.style.left = `${x * scale + positionX}px`;
-        cp.style.top = `${y * scale + positionY}px`;
-        // Авто-меняем размер чекбокса (не исчезает при zoom)
-        const size = 20 / scale;
-        cp.style.width = `${size}px`;
-        cp.style.height = `${size}px`;
-      });
-    }
-  </script>
+        <!-- Чекпоинты -->
+        <div class="checkpoint" id="checkpoint1" data-x="1024" data-y="1212">
+            <div>1</div>
+        </div>
+        <div class="tooltip" data-target="checkpoint1">Точка сбора ресурсов</div>
+        
+        <div class="checkpoint" id="checkpoint2" data-x="1869" data-y="788">
+            <div>2</div>
+        </div>
+        <div class="tooltip" data-target="checkpoint2">Производственный комплекс</div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Основные элементы
+            const viewer = document.getElementById('viewer-container');
+            const mapWrapper = document.getElementById('map-wrapper');
+            const mapImage = document.getElementById('map-image');
+            
+            // Параметры изображения
+            const IMG_WIDTH = 5112;
+            const IMG_HEIGHT = 5112;
+            
+            // Состояние просмотрщика
+            let scale = 1;
+            let offsetX = 0;
+            let offsetY = 0;
+            let isDragging = false;
+            let startDragX = 0;
+            let startDragY = 0;
+            let lastX = 0;
+            let lastY = 0;
+
+            // Инициализация позиции чекпоинтов
+            function positionCheckpoints() {
+                document.querySelectorAll('.checkpoint').forEach(checkpoint => {
+                    const x = parseInt(checkpoint.dataset.x);
+                    const y = parseInt(checkpoint.dataset.y);
+                    
+                    checkpoint.style.left = `${x}px`;
+                    checkpoint.style.top = `${y}px`;
+                });
+            }
+
+            // Обновление трансформации изображения
+            function updateTransform() {
+                mapWrapper.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
+            }
+
+            // Обработка колесика мыши (масштабирование)
+            viewer.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                
+                const delta = e.deltaY > 0 ? -0.1 : 0.1;
+                const newScale = scale + delta;
+                
+                // Ограничение масштаба
+                if (newScale < 0.3 || newScale > 5) return;
+                
+                // Масштабирование относительно курсора
+                const rect = viewer.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                
+                const oldScale = scale;
+                scale = newScale;
+                
+                // Расчет нового смещения
+                offsetX -= (mouseX - offsetX) * (scale / oldScale - 1);
+                offsetY -= (mouseY - offsetY) * (scale / oldScale - 1);
+                
+                updateTransform();
+            });
+
+            // Начало перетаскивания (ЛКМ)
+            viewer.addEventListener('mousedown', (e) => {
+                if (e.button !== 0) return; // Только левая кнопка мыши
+                
+                isDragging = true;
+                startDragX = e.clientX;
+                startDragY = e.clientY;
+                lastX = offsetX;
+                lastY = offsetY;
+                
+                viewer.style.cursor = 'grabbing';
+            });
+
+            // Перетаскивание
+            viewer.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                
+                const dx = e.clientX - startDragX;
+                const dy = e.clientY - startDragY;
+                
+                offsetX = lastX + dx;
+                offsetY = lastY + dy;
+                
+                updateTransform();
+            });
+
+            // Окончание перетаскивания
+            viewer.addEventListener('mouseup', () => {
+                isDragging = false;
+                viewer.style.cursor = 'grab';
+            });
+
+            viewer.addEventListener('mouseleave', () => {
+                isDragging = false;
+                viewer.style.cursor = 'default';
+            });
+
+            // Инициализация
+            positionCheckpoints();
+            updateTransform();
+
+            // Обработка изменения размера окна
+            window.addEventListener('resize', () => {
+                positionCheckpoints();
+            });
+        });
+    </script>
 </body>
 </html>
