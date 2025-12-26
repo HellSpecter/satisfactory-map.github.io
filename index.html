@@ -65,6 +65,15 @@
             background-color: #3aa8d8;
         }
         
+        .save-btn {
+            background-color: #44ff44;
+            color: #16213e;
+        }
+        
+        .save-btn:hover {
+            background-color: #33dd33;
+        }
+        
         .container {
             display: flex;
             flex: 1;
@@ -101,8 +110,8 @@
         }
         
         .checkbox-container input[type="checkbox"] {
-            width: 25px;
-            height: 25px;
+            width: 50px;
+            height: 50px;
             cursor: pointer;
             accent-color: #ff4444;
             transform: scale(1);
@@ -111,7 +120,8 @@
         
         .checkbox-container input[type="checkbox"]:checked {
             accent-color: #ff4444;
-            box-shadow: 0 0 10px rgba(255, 68, 68, 0.7);
+            box-shadow: 0 0 15px rgba(255, 68, 68, 0.9);
+            transform: scale(1.05);
         }
         
         .checkbox-container .tooltip {
@@ -122,8 +132,8 @@
             padding: 8px 12px;
             border-radius: 5px;
             border: 1px solid #4cc9f0;
-            width: 200px;
-            top: 30px;
+            width: 250px;
+            top: 55px;
             left: 0;
             z-index: 100;
             font-size: 0.9rem;
@@ -228,6 +238,7 @@
                 <button id="zoom-out">-</button>
                 <button id="reset-view">Сброс</button>
             </div>
+            <button id="save-btn" class="save-btn">Сохранить</button>
             <button id="toggle-checkboxes">Показать/скрыть метки</button>
         </div>
     </div>
@@ -287,6 +298,7 @@
             const zoomInBtn = document.getElementById('zoom-in');
             const zoomOutBtn = document.getElementById('zoom-out');
             const resetViewBtn = document.getElementById('reset-view');
+            const saveBtn = document.getElementById('save-btn');
             const toggleCheckboxesBtn = document.getElementById('toggle-checkboxes');
             const zoomLevelElement = document.getElementById('zoom-level');
             const coordinatesElement = document.getElementById('coordinates');
@@ -355,11 +367,18 @@
                     }
                     
                     // Загружаем сохраненные данные из data.json
-                    const dataResponse = await fetch('data.json');
-                    if (dataResponse.ok) {
-                        savedData = await dataResponse.json();
-                    } else {
-                        // Если файла нет, создаем пустой объект
+                    try {
+                        const dataResponse = await fetch('data.json');
+                        if (dataResponse.ok) {
+                            savedData = await dataResponse.json();
+                            console.log('Загружены сохраненные данные:', savedData);
+                        } else {
+                            // Если файла нет, создаем пустой объект
+                            savedData = {};
+                            console.log('Файл data.json не найден, создан пустой объект');
+                        }
+                    } catch (dataError) {
+                        console.warn('Ошибка загрузки data.json:', dataError);
                         savedData = {};
                     }
                 } catch (error) {
@@ -386,17 +405,110 @@
                         }
                     });
                     
-                    // Сохраняем данные
-                    await fetch('data.json', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(checkedData)
-                    });
+                    console.log('Сохранение данных:', checkedData);
+                    
+                    // Сохраняем данные с помощью FormData (работает на GitHub Pages)
+                    const formData = new FormData();
+                    formData.append('data', JSON.stringify(checkedData));
+                    
+                    // Пытаемся сохранить разными способами
+                    try {
+                        // Способ 1: POST запрос
+                        const response = await fetch('data.json', {
+                            method: 'POST',
+                            body: JSON.stringify(checkedData),
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        
+                        if (response.ok) {
+                            console.log('Данные успешно сохранены (POST)');
+                            showSaveNotification('Данные сохранены!');
+                        } else {
+                            // Способ 2: Используем localStorage как fallback
+                            localStorage.setItem('satisfactoryMapData', JSON.stringify(checkedData));
+                            console.log('Данные сохранены в localStorage');
+                            showSaveNotification('Данные сохранены в localStorage!');
+                        }
+                    } catch (fetchError) {
+                        // Способ 3: localStorage как основной способ
+                        localStorage.setItem('satisfactoryMapData', JSON.stringify(checkedData));
+                        console.log('Данные сохранены в localStorage (fallback)');
+                        showSaveNotification('Данные сохранены в localStorage!');
+                    }
+                    
+                    // Обновляем savedData для будущих загрузок
+                    savedData = checkedData;
+                    
                 } catch (error) {
                     console.error('Ошибка сохранения данных:', error);
+                    showSaveNotification('Ошибка сохранения!', true);
                 }
+            }
+            
+            // Показать уведомление о сохранении
+            function showSaveNotification(message, isError = false) {
+                // Удаляем предыдущее уведомление
+                const existingNotification = document.querySelector('.save-notification');
+                if (existingNotification) {
+                    existingNotification.remove();
+                }
+                
+                // Создаем новое уведомление
+                const notification = document.createElement('div');
+                notification.className = 'save-notification';
+                notification.textContent = message;
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background-color: ${isError ? '#ff4444' : '#44ff44'};
+                    color: #16213e;
+                    padding: 12px 20px;
+                    border-radius: 5px;
+                    font-weight: bold;
+                    z-index: 1000;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                    animation: fadeInOut 3s ease-in-out;
+                `;
+                
+                // Добавляем стили для анимации
+                const style = document.createElement('style');
+                style.textContent = `
+                    @keyframes fadeInOut {
+                        0% { opacity: 0; transform: translateY(-20px); }
+                        10% { opacity: 1; transform: translateY(0); }
+                        90% { opacity: 1; transform: translateY(0); }
+                        100% { opacity: 0; transform: translateY(-20px); }
+                    }
+                `;
+                document.head.appendChild(style);
+                
+                document.body.appendChild(notification);
+                
+                // Удаляем уведомление через 3 секунды
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                    if (style.parentNode) {
+                        style.remove();
+                    }
+                }, 3000);
+            }
+            
+            // Загрузка данных из localStorage
+            function loadFromLocalStorage() {
+                try {
+                    const saved = localStorage.getItem('satisfactoryMapData');
+                    if (saved) {
+                        return JSON.parse(saved);
+                    }
+                } catch (error) {
+                    console.error('Ошибка загрузки из localStorage:', error);
+                }
+                return {};
             }
             
             // Создание чекбоксов на карте
@@ -404,6 +516,9 @@
                 // Очищаем существующие чекбоксы (кроме изображения)
                 const existingCheckboxes = mapWrapper.querySelectorAll('.checkbox-container');
                 existingCheckboxes.forEach(el => el.remove());
+                
+                // Загружаем данные из localStorage как fallback
+                const localStorageData = loadFromLocalStorage();
                 
                 // Создаем чекбоксы для каждой точки
                 checkboxData.forEach(item => {
@@ -419,7 +534,8 @@
                     checkbox.dataset.id = item.id;
                     
                     // Восстанавливаем состояние из сохраненных данных
-                    if (savedData[item.id]) {
+                    // Сначала пробуем из data.json, потом из localStorage
+                    if (savedData[item.id] || localStorageData[item.id]) {
                         checkbox.checked = true;
                     }
                     
@@ -434,6 +550,7 @@
                     // Обработчик изменения чекбокса
                     checkbox.addEventListener('change', function() {
                         updateStats();
+                        // Автосохранение при изменении
                         saveData();
                     });
                 });
@@ -545,22 +662,26 @@
                 updateCoordinatesInfo();
             });
             
-            // Обработчики событий для перетаскивания
+            // Улучшенные обработчики событий для перетаскивания
+            let dragStart = null;
+            
             mapContainer.addEventListener('mousedown', function(e) {
                 if (e.button === 0) { // Левая кнопка мыши
-                    isDragging = true;
-                    startX = e.clientX;
-                    startY = e.clientY;
-                    initialOffsetX = offsetX;
-                    initialOffsetY = offsetY;
+                    e.preventDefault();
+                    dragStart = {
+                        x: e.clientX - offsetX,
+                        y: e.clientY - offsetY
+                    };
                     mapContainer.classList.add('dragging');
+                    mapContainer.style.cursor = 'grabbing';
                 }
             });
             
-            document.addEventListener('mousemove', function(e) {
-                if (isDragging) {
-                    offsetX = initialOffsetX + (e.clientX - startX);
-                    offsetY = initialOffsetY + (e.clientY - startY);
+            mapContainer.addEventListener('mousemove', function(e) {
+                if (dragStart !== null) {
+                    e.preventDefault();
+                    offsetX = e.clientX - dragStart.x;
+                    offsetY = e.clientY - dragStart.y;
                     
                     constrainOffset();
                     updateMapTransform();
@@ -568,10 +689,19 @@
                 }
             });
             
-            document.addEventListener('mouseup', function() {
-                if (isDragging) {
-                    isDragging = false;
+            // Отслеживаем отпускание кнопки мыши в любом месте документа
+            document.addEventListener('mouseup', function(e) {
+                if (dragStart !== null) {
+                    dragStart = null;
                     mapContainer.classList.remove('dragging');
+                    mapContainer.style.cursor = 'grab';
+                }
+            });
+            
+            // Предотвращаем контекстное меню при перетаскивании
+            mapContainer.addEventListener('contextmenu', function(e) {
+                if (dragStart !== null) {
+                    e.preventDefault();
                 }
             });
             
@@ -616,6 +746,10 @@
             
             resetViewBtn.addEventListener('click', resetView);
             
+            saveBtn.addEventListener('click', function() {
+                saveData();
+            });
+            
             toggleCheckboxesBtn.addEventListener('click', function() {
                 checkboxesVisible = !checkboxesVisible;
                 updateCheckboxesVisibility();
@@ -643,7 +777,7 @@
             
             // Обновление координат при движении мыши по карте
             mapContainer.addEventListener('mousemove', function(e) {
-                if (isDragging) return;
+                if (dragStart !== null) return;
                 
                 const rect = mapContainer.getBoundingClientRect();
                 const mouseX = e.clientX - rect.left;
@@ -662,13 +796,18 @@
             
             // Предотвращаем выделение текста при перетаскивании
             mapContainer.addEventListener('selectstart', function(e) {
-                if (isDragging) {
+                if (dragStart !== null) {
                     e.preventDefault();
                 }
             });
             
             // Обновляем счетчик видимых объектов при перемещении карты
             mapContainer.addEventListener('mousemove', updateVisibleCount);
+            
+            // Автосохранение при закрытии страницы
+            window.addEventListener('beforeunload', function() {
+                saveData();
+            });
         });
     </script>
 </body>
