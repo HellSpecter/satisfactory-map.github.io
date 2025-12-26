@@ -3,206 +3,550 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Satisfactory Map Viewer</title>
+    <title>Satisfactory Interactive Map</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-
+        
         body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a2e;
+            color: #e0e0e0;
             overflow: hidden;
-            font-family: Arial, sans-serif;
-        }
-
-        #viewer-container {
-            position: relative;
-            width: 100vw;
             height: 100vh;
-            overflow: hidden;
-            background: #2c2c2c;
-        }
-
-        #map-wrapper {
-            position: absolute;
-            transition: transform 0.05s;
-        }
-
-        #map-image {
-            display: block;
-            width: 5112px;
-            height: 5112px;
-        }
-
-        .checkpoint {
-            position: absolute;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background-color: rgba(255, 50, 50, 0.8);
-            border: 3px solid gold;
-            cursor: pointer;
-            transform: translate(-50%, -50%);
             display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background-color: #16213e;
+            padding: 15px 20px;
+            border-bottom: 2px solid #0f3460;
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            font-size: 20px;
-            z-index: 10;
-            transition: transform 0.2s;
+            flex-shrink: 0;
         }
-
-        .checkpoint:hover {
-            transform: translate(-50%, -50%) scale(1.2);
+        
+        .header h1 {
+            color: #4cc9f0;
+            font-size: 1.8rem;
         }
-
-        .tooltip {
-            position: absolute;
-            background: rgba(0, 0, 0, 0.85);
-            color: white;
-            padding: 8px 12px;
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .zoom-controls {
+            display: flex;
+            gap: 5px;
+            background-color: #0f3460;
+            padding: 5px;
+            border-radius: 5px;
+        }
+        
+        button {
+            background-color: #4cc9f0;
+            color: #16213e;
+            border: none;
+            padding: 8px 15px;
             border-radius: 4px;
-            font-size: 14px;
-            white-space: nowrap;
-            z-index: 20;
-            pointer-events: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #3aa8d8;
+        }
+        
+        .container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        .map-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background-color: #0a0a1a;
+        }
+        
+        #map-image {
+            position: absolute;
+            cursor: grab;
+            transform-origin: 0 0;
+            transition: transform 0.1s;
+            user-select: none;
+        }
+        
+        #map-image.dragging {
+            cursor: grabbing;
+        }
+        
+        .checkbox-container {
+            position: absolute;
+            z-index: 10;
+        }
+        
+        .checkbox-container input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #4cc9f0;
+        }
+        
+        .checkbox-container .tooltip {
+            visibility: hidden;
+            position: absolute;
+            background-color: rgba(22, 33, 62, 0.95);
+            color: #e0e0e0;
+            padding: 8px 12px;
+            border-radius: 5px;
+            border: 1px solid #4cc9f0;
+            width: 200px;
+            top: 25px;
+            left: 0;
+            z-index: 100;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
             opacity: 0;
             transition: opacity 0.3s;
-            transform: translate(-50%, -100%);
-            margin-top: -10px;
         }
-
-        .checkpoint:hover + .tooltip {
+        
+        .checkbox-container:hover .tooltip {
+            visibility: visible;
             opacity: 1;
+        }
+        
+        .sidebar {
+            width: 300px;
+            background-color: #16213e;
+            border-left: 2px solid #0f3460;
+            padding: 20px;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+        
+        .sidebar h2 {
+            color: #4cc9f0;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #0f3460;
+        }
+        
+        .checkbox-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+            background-color: rgba(15, 52, 96, 0.3);
+            border-radius: 5px;
+            transition: background-color 0.2s;
+        }
+        
+        .checkbox-item:hover {
+            background-color: rgba(15, 52, 96, 0.5);
+        }
+        
+        .checkbox-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #4cc9f0;
+        }
+        
+        .checkbox-item label {
+            cursor: pointer;
+            flex: 1;
+        }
+        
+        .status-bar {
+            background-color: #0f3460;
+            padding: 8px 20px;
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+        
+        .instructions {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: rgba(15, 52, 96, 0.3);
+            border-radius: 5px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        
+        .instructions h3 {
+            color: #4cc9f0;
+            margin-bottom: 8px;
+        }
+        
+        .instructions ul {
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: 250px;
+                border-left: none;
+                border-top: 2px solid #0f3460;
+            }
         }
     </style>
 </head>
 <body>
-    <div id="viewer-container">
-        <div id="map-wrapper">
+    <div class="header">
+        <h1>Satisfactory Interactive Map</h1>
+        <div class="controls">
+            <div class="zoom-controls">
+                <button id="zoom-in">+</button>
+                <button id="zoom-out">-</button>
+                <button id="reset-view">Сброс</button>
+            </div>
+            <button id="toggle-checkboxes">Показать/скрыть метки</button>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="map-container" id="map-container">
             <img id="map-image" src="images/map.jpg" alt="Satisfactory Map">
+            
+            <!-- Чекбоксы будут добавлены с помощью JavaScript -->
         </div>
         
-        <!-- Чекпоинты -->
-        <div class="checkpoint" id="checkpoint1" data-x="1024" data-y="1212">
-            <div>1</div>
+        <div class="sidebar">
+            <h2>Объекты на карте</h2>
+            <div class="checkbox-list" id="checkbox-list">
+                <!-- Список чекбоксов будет добавлен с помощью JavaScript -->
+            </div>
+            
+            <div class="instructions">
+                <h3>Управление картой</h3>
+                <ul>
+                    <li><strong>Колёсико мыши</strong> - приближение/отдаление</li>
+                    <li><strong>ЛКМ + перетаскивание</strong> - перемещение по карте</li>
+                    <li><strong>Двойной клик</strong> - сброс масштаба и положения</li>
+                    <li><strong>Наведите на метку</strong> - чтобы увидеть описание</li>
+                </ul>
+            </div>
         </div>
-        <div class="tooltip" data-target="checkpoint1">Точка сбора ресурсов</div>
-        
-        <div class="checkpoint" id="checkpoint2" data-x="1869" data-y="788">
-            <div>2</div>
-        </div>
-        <div class="tooltip" data-target="checkpoint2">Производственный комплекс</div>
+    </div>
+    
+    <div class="status-bar">
+        <div>Масштаб: <span id="zoom-level">100%</span></div>
+        <div>Координаты: <span id="coordinates">x: 0, y: 0</span></div>
+        <div>Выбрано объектов: <span id="selected-count">0</span></div>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Основные элементы
-            const viewer = document.getElementById('viewer-container');
-            const mapWrapper = document.getElementById('map-wrapper');
+        document.addEventListener('DOMContentLoaded', function() {
+            // Элементы DOM
+            const mapContainer = document.getElementById('map-container');
             const mapImage = document.getElementById('map-image');
+            const zoomInBtn = document.getElementById('zoom-in');
+            const zoomOutBtn = document.getElementById('zoom-out');
+            const resetViewBtn = document.getElementById('reset-view');
+            const toggleCheckboxesBtn = document.getElementById('toggle-checkboxes');
+            const zoomLevelElement = document.getElementById('zoom-level');
+            const coordinatesElement = document.getElementById('coordinates');
+            const selectedCountElement = document.getElementById('selected-count');
+            const checkboxListElement = document.getElementById('checkbox-list');
             
-            // Параметры изображения
-            const IMG_WIDTH = 5112;
-            const IMG_HEIGHT = 5112;
-            
-            // Состояние просмотрщика
+            // Параметры карты
+            const mapWidth = 5112;
+            const mapHeight = 5112;
             let scale = 1;
             let offsetX = 0;
             let offsetY = 0;
             let isDragging = false;
-            let startDragX = 0;
-            let startDragY = 0;
-            let lastX = 0;
-            let lastY = 0;
-
-            // Инициализация позиции чекпоинтов
-            function positionCheckpoints() {
-                document.querySelectorAll('.checkpoint').forEach(checkpoint => {
-                    const x = parseInt(checkpoint.dataset.x);
-                    const y = parseInt(checkpoint.dataset.y);
+            let startX, startY;
+            let initialOffsetX, initialOffsetY;
+            let checkboxesVisible = true;
+            
+            // Координаты для чекбоксов
+            const checkboxData = [
+                { id: 1, x: 1024, y: 1212, label: "Месторождение железной руды", tooltip: "Богатое месторождение железной руды. Идеально для начала добычи." },
+                { id: 2, x: 1869, y: 788, label: "Залежи меди", tooltip: "Крупные залежи медной руды. Необходимы для производства проводов и электроники." }
+            ];
+            
+            // Инициализация карты
+            function initMap() {
+                // Устанавливаем начальное положение карты по центру
+                offsetX = (mapContainer.clientWidth - mapWidth) / 2;
+                offsetY = (mapContainer.clientHeight - mapHeight) / 2;
+                updateMapTransform();
+                
+                // Создаем чекбоксы на карте
+                createCheckboxes();
+                
+                // Обновляем счетчик выбранных объектов
+                updateSelectedCount();
+                
+                // Обновляем информацию о координатах
+                updateCoordinatesInfo();
+            }
+            
+            // Создание чекбоксов на карте и в сайдбаре
+            function createCheckboxes() {
+                // Очищаем списки
+                mapContainer.querySelectorAll('.checkbox-container').forEach(el => el.remove());
+                checkboxListElement.innerHTML = '';
+                
+                // Создаем чекбоксы для каждой точки
+                checkboxData.forEach(item => {
+                    // Создаем чекбокс на карте
+                    const checkboxContainer = document.createElement('div');
+                    checkboxContainer.className = 'checkbox-container';
+                    checkboxContainer.style.left = `${item.x}px`;
+                    checkboxContainer.style.top = `${item.y}px`;
                     
-                    checkpoint.style.left = `${x}px`;
-                    checkpoint.style.top = `${y}px`;
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.id = `map-checkbox-${item.id}`;
+                    checkbox.dataset.id = item.id;
+                    
+                    const tooltip = document.createElement('div');
+                    tooltip.className = 'tooltip';
+                    tooltip.textContent = item.tooltip;
+                    
+                    checkboxContainer.appendChild(checkbox);
+                    checkboxContainer.appendChild(tooltip);
+                    mapContainer.appendChild(checkboxContainer);
+                    
+                    // Создаем элемент в сайдбаре
+                    const listItem = document.createElement('div');
+                    listItem.className = 'checkbox-item';
+                    
+                    const sidebarCheckbox = document.createElement('input');
+                    sidebarCheckbox.type = 'checkbox';
+                    sidebarCheckbox.id = `sidebar-checkbox-${item.id}`;
+                    sidebarCheckbox.dataset.id = item.id;
+                    
+                    const label = document.createElement('label');
+                    label.htmlFor = `sidebar-checkbox-${item.id}`;
+                    label.textContent = item.label;
+                    
+                    listItem.appendChild(sidebarCheckbox);
+                    listItem.appendChild(label);
+                    checkboxListElement.appendChild(listItem);
+                    
+                    // Связываем чекбоксы на карте и в сайдбаре
+                    checkbox.addEventListener('change', function() {
+                        document.getElementById(`sidebar-checkbox-${item.id}`).checked = this.checked;
+                        updateSelectedCount();
+                    });
+                    
+                    sidebarCheckbox.addEventListener('change', function() {
+                        document.getElementById(`map-checkbox-${item.id}`).checked = this.checked;
+                        updateSelectedCount();
+                    });
                 });
             }
-
-            // Обновление трансформации изображения
-            function updateTransform() {
-                mapWrapper.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
+            
+            // Обновление счетчика выбранных объектов
+            function updateSelectedCount() {
+                const selectedCheckboxes = document.querySelectorAll('.checkbox-container input[type="checkbox"]:checked');
+                selectedCountElement.textContent = selectedCheckboxes.length;
             }
-
-            // Обработка колесика мыши (масштабирование)
-            viewer.addEventListener('wheel', (e) => {
+            
+            // Обновление трансформации карты
+            function updateMapTransform() {
+                mapImage.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
+                zoomLevelElement.textContent = `${Math.round(scale * 100)}%`;
+                
+                // Обновляем позиции чекбоксов при изменении масштаба
+                updateCheckboxPositions();
+            }
+            
+            // Обновление позиций чекбоксов при изменении масштаба
+            function updateCheckboxPositions() {
+                document.querySelectorAll('.checkbox-container').forEach(container => {
+                    const checkboxId = container.querySelector('input').dataset.id;
+                    const checkboxItem = checkboxData.find(item => item.id == checkboxId);
+                    
+                    if (checkboxItem) {
+                        // Позиционируем чекбокс с учетом масштаба и смещения
+                        const x = checkboxItem.x * scale + offsetX;
+                        const y = checkboxItem.y * scale + offsetY;
+                        
+                        container.style.transform = `translate(${x}px, ${y}px) scale(${1/scale})`;
+                        container.style.display = checkboxesVisible ? 'block' : 'none';
+                    }
+                });
+            }
+            
+            // Обновление информации о координатах
+            function updateCoordinatesInfo() {
+                // Координаты центра экрана относительно карты
+                const centerX = Math.round((-offsetX + mapContainer.clientWidth / 2) / scale);
+                const centerY = Math.round((-offsetY + mapContainer.clientHeight / 2) / scale);
+                
+                // Ограничиваем координаты размерами карты
+                const boundedX = Math.max(0, Math.min(mapWidth, centerX));
+                const boundedY = Math.max(0, Math.min(mapHeight, centerY));
+                
+                coordinatesElement.textContent = `x: ${boundedX}, y: ${boundedY}`;
+            }
+            
+            // Ограничение смещения, чтобы карта не выходила за границы контейнера
+            function constrainOffset() {
+                const maxOffsetX = mapContainer.clientWidth - mapWidth * scale;
+                const maxOffsetY = mapContainer.clientHeight - mapHeight * scale;
+                
+                offsetX = Math.min(0, Math.max(maxOffsetX, offsetX));
+                offsetY = Math.min(0, Math.max(maxOffsetY, offsetY));
+            }
+            
+            // Обработчики событий для масштабирования
+            mapContainer.addEventListener('wheel', function(e) {
                 e.preventDefault();
                 
-                const delta = e.deltaY > 0 ? -0.1 : 0.1;
-                const newScale = scale + delta;
-                
-                // Ограничение масштаба
-                if (newScale < 0.3 || newScale > 5) return;
-                
-                // Масштабирование относительно курсора
-                const rect = viewer.getBoundingClientRect();
+                const rect = mapContainer.getBoundingClientRect();
                 const mouseX = e.clientX - rect.left;
                 const mouseY = e.clientY - rect.top;
                 
-                const oldScale = scale;
-                scale = newScale;
+                // Координаты мыши относительно карты до масштабирования
+                const prevX = (mouseX - offsetX) / scale;
+                const prevY = (mouseY - offsetY) / scale;
                 
-                // Расчет нового смещения
-                offsetX -= (mouseX - offsetX) * (scale / oldScale - 1);
-                offsetY -= (mouseY - offsetY) * (scale / oldScale - 1);
+                // Изменение масштаба
+                const delta = e.deltaY > 0 ? 0.9 : 1.1;
+                scale *= delta;
                 
-                updateTransform();
+                // Ограничиваем масштаб
+                scale = Math.max(0.1, Math.min(5, scale));
+                
+                // Корректируем смещение, чтобы точка под курсором оставалась на месте
+                offsetX = mouseX - prevX * scale;
+                offsetY = mouseY - prevY * scale;
+                
+                constrainOffset();
+                updateMapTransform();
+                updateCoordinatesInfo();
             });
-
-            // Начало перетаскивания (ЛКМ)
-            viewer.addEventListener('mousedown', (e) => {
-                if (e.button !== 0) return; // Только левая кнопка мыши
-                
-                isDragging = true;
-                startDragX = e.clientX;
-                startDragY = e.clientY;
-                lastX = offsetX;
-                lastY = offsetY;
-                
-                viewer.style.cursor = 'grabbing';
+            
+            // Обработчики событий для перетаскивания
+            mapContainer.addEventListener('mousedown', function(e) {
+                if (e.button === 0) { // Левая кнопка мыши
+                    isDragging = true;
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    initialOffsetX = offsetX;
+                    initialOffsetY = offsetY;
+                    mapImage.classList.add('dragging');
+                    mapContainer.style.cursor = 'grabbing';
+                }
             });
-
-            // Перетаскивание
-            viewer.addEventListener('mousemove', (e) => {
-                if (!isDragging) return;
-                
-                const dx = e.clientX - startDragX;
-                const dy = e.clientY - startDragY;
-                
-                offsetX = lastX + dx;
-                offsetY = lastY + dy;
-                
-                updateTransform();
+            
+            document.addEventListener('mousemove', function(e) {
+                if (isDragging) {
+                    offsetX = initialOffsetX + (e.clientX - startX);
+                    offsetY = initialOffsetY + (e.clientY - startY);
+                    
+                    constrainOffset();
+                    updateMapTransform();
+                    updateCoordinatesInfo();
+                }
             });
-
-            // Окончание перетаскивания
-            viewer.addEventListener('mouseup', () => {
-                isDragging = false;
-                viewer.style.cursor = 'grab';
+            
+            document.addEventListener('mouseup', function() {
+                if (isDragging) {
+                    isDragging = false;
+                    mapImage.classList.remove('dragging');
+                    mapContainer.style.cursor = 'grab';
+                }
             });
-
-            viewer.addEventListener('mouseleave', () => {
-                isDragging = false;
-                viewer.style.cursor = 'default';
+            
+            // Двойной клик для сброса
+            mapContainer.addEventListener('dblclick', function(e) {
+                e.preventDefault();
+                resetView();
             });
-
-            // Инициализация
-            positionCheckpoints();
-            updateTransform();
-
+            
+            // Кнопки управления
+            zoomInBtn.addEventListener('click', function() {
+                scale *= 1.2;
+                scale = Math.min(5, scale);
+                constrainOffset();
+                updateMapTransform();
+                updateCoordinatesInfo();
+            });
+            
+            zoomOutBtn.addEventListener('click', function() {
+                scale *= 0.8;
+                scale = Math.max(0.1, scale);
+                constrainOffset();
+                updateMapTransform();
+                updateCoordinatesInfo();
+            });
+            
+            resetViewBtn.addEventListener('click', resetView);
+            
+            toggleCheckboxesBtn.addEventListener('click', function() {
+                checkboxesVisible = !checkboxesVisible;
+                updateCheckboxPositions();
+                this.textContent = checkboxesVisible ? 'Скрыть метки' : 'Показать метки';
+            });
+            
+            // Функция сброса вида
+            function resetView() {
+                scale = 1;
+                offsetX = (mapContainer.clientWidth - mapWidth) / 2;
+                offsetY = (mapContainer.clientHeight - mapHeight) / 2;
+                updateMapTransform();
+                updateCoordinatesInfo();
+            }
+            
             // Обработка изменения размера окна
-            window.addEventListener('resize', () => {
-                positionCheckpoints();
+            window.addEventListener('resize', function() {
+                constrainOffset();
+                updateMapTransform();
+                updateCoordinatesInfo();
+            });
+            
+            // Инициализация при загрузке
+            initMap();
+            
+            // Обновление координат при движении мыши по карте
+            mapContainer.addEventListener('mousemove', function(e) {
+                if (isDragging) return;
+                
+                const rect = mapContainer.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                
+                // Координаты мыши относительно карты
+                const mapX = Math.round((mouseX - offsetX) / scale);
+                const mapY = Math.round((mouseY - offsetY) / scale);
+                
+                // Ограничиваем координаты размерами карты
+                const boundedX = Math.max(0, Math.min(mapWidth, mapX));
+                const boundedY = Math.max(0, Math.min(mapHeight, mapY));
+                
+                coordinatesElement.textContent = `x: ${boundedX}, y: ${boundedY}`;
             });
         });
     </script>
