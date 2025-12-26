@@ -74,6 +74,24 @@
             background-color: #33dd33;
         }
         
+        .cloud-btn {
+            background-color: #ffaa44;
+            color: #16213e;
+        }
+        
+        .cloud-btn:hover {
+            background-color: #ee9933;
+        }
+        
+        .danger-btn {
+            background-color: #ff4444;
+            color: #16213e;
+        }
+        
+        .danger-btn:hover {
+            background-color: #dd3333;
+        }
+        
         .container {
             display: flex;
             flex: 1;
@@ -149,7 +167,7 @@
         }
         
         .sidebar {
-            width: 300px;
+            width: 350px;
             background-color: #16213e;
             border-left: 2px solid #0f3460;
             padding: 20px;
@@ -184,6 +202,50 @@
             color: #4cc9f0;
         }
         
+        .data-management {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: rgba(15, 52, 96, 0.3);
+            border-radius: 5px;
+        }
+        
+        .data-management h3 {
+            color: #4cc9f0;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+        
+        .data-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .data-buttons button {
+            width: 100%;
+        }
+        
+        .sync-status {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: rgba(15, 52, 96, 0.5);
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .sync-status h4 {
+            color: #4cc9f0;
+            margin-bottom: 5px;
+        }
+        
+        .sync-info {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+            font-size: 0.85rem;
+            color: #a0a0a0;
+        }
+        
         .instructions {
             margin-top: auto;
             padding: 15px;
@@ -215,6 +277,80 @@
             flex-shrink: 0;
         }
         
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: #16213e;
+            padding: 25px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            border: 2px solid #0f3460;
+        }
+        
+        .modal-content h3 {
+            color: #4cc9f0;
+            margin-bottom: 15px;
+        }
+        
+        .modal-content p {
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+        
+        .modal-content input,
+        .modal-content textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            background-color: #0a0a1a;
+            color: #e0e0e0;
+            border: 1px solid #0f3460;
+            border-radius: 5px;
+            font-family: inherit;
+        }
+        
+        .modal-content textarea {
+            height: 150px;
+            resize: vertical;
+            font-family: monospace;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        
+        .api-key-info {
+            font-size: 0.8rem;
+            color: #a0a0a0;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+        }
+        
+        .api-key-info a {
+            color: #4cc9f0;
+            text-decoration: none;
+        }
+        
+        .api-key-info a:hover {
+            text-decoration: underline;
+        }
+        
         @media (max-width: 768px) {
             .container {
                 flex-direction: column;
@@ -222,9 +358,13 @@
             
             .sidebar {
                 width: 100%;
-                height: 250px;
+                height: 350px;
                 border-left: none;
                 border-top: 2px solid #0f3460;
+            }
+            
+            .controls {
+                flex-wrap: wrap;
             }
         }
     </style>
@@ -238,7 +378,6 @@
                 <button id="zoom-out">-</button>
                 <button id="reset-view">Сброс</button>
             </div>
-            <button id="save-btn" class="save-btn">Сохранить</button>
             <button id="toggle-checkboxes">Показать/скрыть метки</button>
         </div>
     </div>
@@ -272,6 +411,28 @@
                 </div>
             </div>
             
+            <div class="data-management">
+                <h3>Управление данными</h3>
+                <div class="data-buttons">
+                    <button id="save-local-btn" class="save-btn">Сохранить локально</button>
+                    <button id="sync-cloud-btn" class="cloud-btn">Синхронизировать с облаком</button>
+                    <button id="load-cloud-btn" class="cloud-btn">Загрузить из облака</button>
+                    <button id="export-btn">Экспорт данных</button>
+                    <button id="import-btn">Импорт данных</button>
+                    <button id="setup-cloud-btn">Настройка облака</button>
+                    <button id="clear-btn" class="danger-btn">Очистить все отметки</button>
+                </div>
+                
+                <div class="sync-status">
+                    <h4>Статус синхронизации</h4>
+                    <div id="sync-status-text">Не настроено</div>
+                    <div class="sync-info">
+                        <span id="last-sync">Последняя синхронизация: никогда</span>
+                        <span id="cloud-status">Облако: отключено</span>
+                    </div>
+                </div>
+            </div>
+            
             <div class="instructions">
                 <h3>Управление картой</h3>
                 <ul>
@@ -279,6 +440,10 @@
                     <li><strong>ЛКМ + перетаскивание</strong> - перемещение по карте</li>
                     <li><strong>Наведите на метку</strong> - чтобы увидеть описание</li>
                 </ul>
+                <p style="margin-top: 10px; font-size: 0.8rem; color: #a0a0a0;">
+                    Данные сохраняются в вашем браузере. Для синхронизации между устройствами
+                    настройте облачное хранилище (JSONBin.io).
+                </p>
             </div>
         </div>
     </div>
@@ -287,6 +452,49 @@
         <div>Масштаб: <span id="zoom-level">100%</span></div>
         <div>Координаты: <span id="coordinates">x: 0, y: 0</span></div>
         <div>Объектов на экране: <span id="visible-count">0</span></div>
+    </div>
+    
+    <!-- Модальное окно для настройки облака -->
+    <div id="cloud-setup-modal" class="modal">
+        <div class="modal-content">
+            <h3>Настройка облачного хранилища</h3>
+            <p>Для синхронизации данных между устройствами используйте JSONBin.io</p>
+            
+            <div class="api-key-info">
+                <p><strong>Как получить API ключ:</strong></p>
+                <ol>
+                    <li>Перейдите на <a href="https://jsonbin.io/" target="_blank">jsonbin.io</a></li>
+                    <li>Зарегистрируйтесь (бесплатно)</li>
+                    <li>В личном кабинете найдите "Master Key"</li>
+                    <li>Скопируйте ключ и вставьте ниже</li>
+                </ol>
+                <p>Бесплатный тариф: 100 запросов/день, публичные бинни</p>
+            </div>
+            
+            <label for="api-key-input">Master Key (API ключ):</label>
+            <input type="password" id="api-key-input" placeholder="Введите ваш Master Key">
+            
+            <label for="bin-id-input">ID бинна (необязательно):</label>
+            <input type="text" id="bin-id-input" placeholder="Оставьте пустым для создания нового">
+            
+            <div class="modal-buttons">
+                <button id="cancel-cloud-setup">Отмена</button>
+                <button id="save-cloud-config" class="save-btn">Сохранить настройки</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Модальное окно для импорта данных -->
+    <div id="import-modal" class="modal">
+        <div class="modal-content">
+            <h3>Импорт данных</h3>
+            <p>Вставьте JSON-данные для импорта:</p>
+            <textarea id="import-data" placeholder='{"1": true, "2": false, "3": true}'></textarea>
+            <div class="modal-buttons">
+                <button id="cancel-import">Отмена</button>
+                <button id="confirm-import" class="save-btn">Импортировать</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -298,8 +506,15 @@
             const zoomInBtn = document.getElementById('zoom-in');
             const zoomOutBtn = document.getElementById('zoom-out');
             const resetViewBtn = document.getElementById('reset-view');
-            const saveBtn = document.getElementById('save-btn');
+            const saveLocalBtn = document.getElementById('save-local-btn');
+            const syncCloudBtn = document.getElementById('sync-cloud-btn');
+            const loadCloudBtn = document.getElementById('load-cloud-btn');
+            const exportBtn = document.getElementById('export-btn');
+            const importBtn = document.getElementById('import-btn');
+            const setupCloudBtn = document.getElementById('setup-cloud-btn');
+            const clearBtn = document.getElementById('clear-btn');
             const toggleCheckboxesBtn = document.getElementById('toggle-checkboxes');
+            
             const zoomLevelElement = document.getElementById('zoom-level');
             const coordinatesElement = document.getElementById('coordinates');
             const totalCountElement = document.getElementById('total-count');
@@ -307,6 +522,22 @@
             const remainingCountElement = document.getElementById('remaining-count');
             const progressPercentElement = document.getElementById('progress-percent');
             const visibleCountElement = document.getElementById('visible-count');
+            const syncStatusText = document.getElementById('sync-status-text');
+            const lastSyncElement = document.getElementById('last-sync');
+            const cloudStatusElement = document.getElementById('cloud-status');
+            
+            // Модальные окна
+            const cloudSetupModal = document.getElementById('cloud-setup-modal');
+            const importModal = document.getElementById('import-modal');
+            const apiKeyInput = document.getElementById('api-key-input');
+            const binIdInput = document.getElementById('bin-id-input');
+            const importDataTextarea = document.getElementById('import-data');
+            
+            // Кнопки модальных окон
+            const cancelCloudSetupBtn = document.getElementById('cancel-cloud-setup');
+            const saveCloudConfigBtn = document.getElementById('save-cloud-config');
+            const cancelImportBtn = document.getElementById('cancel-import');
+            const confirmImportBtn = document.getElementById('confirm-import');
             
             // Параметры карты
             const mapWidth = 5112;
@@ -314,26 +545,41 @@
             let scale = 1;
             let offsetX = 0;
             let offsetY = 0;
-            let isDragging = false;
-            let startX, startY;
-            let initialOffsetX, initialOffsetY;
+            let dragStart = null;
             let checkboxesVisible = true;
             
             // Данные чекбоксов
             let checkboxData = [];
             let savedData = {};
             
+            // Конфигурация JSONBin.io
+            let jsonBinConfig = {
+                apiKey: '',
+                binId: '',
+                enabled: false
+            };
+            
+            // Ключи для localStorage
+            const STORAGE_KEY = 'satisfactory_map_data';
+            const CONFIG_KEY = 'satisfactory_map_config';
+            
             // Инициализация карты
             async function initMap() {
-                // Загружаем данные
-                await loadData();
+                // Загружаем координаты из coords.json
+                await loadCoordinates();
                 
-                // Устанавливаем начальное положение карты по центру
+                // Загружаем конфигурацию
+                loadConfig();
+                
+                // Загружаем сохраненные данные
+                loadSavedData();
+                
+                // Устанавливаем начальное положение карты
                 offsetX = (mapContainer.clientWidth - mapWidth) / 2;
                 offsetY = (mapContainer.clientHeight - mapHeight) / 2;
                 updateMapTransform();
                 
-                // Создаем чекбоксы на карте
+                // Создаем чекбоксы
                 createCheckboxes();
                 
                 // Обновляем статистику
@@ -341,12 +587,16 @@
                 
                 // Обновляем информацию о координатах
                 updateCoordinatesInfo();
+                
+                // Обновляем статус синхронизации
+                updateSyncStatus();
+                
+                showNotification('Карта загружена!', false);
             }
             
-            // Загрузка данных из файлов
-            async function loadData() {
+            // Загрузка координат из coords.json
+            async function loadCoordinates() {
                 try {
-                    // Загружаем координаты из coords.json
                     const coordsResponse = await fetch('coords.json');
                     if (coordsResponse.ok) {
                         const coords = await coordsResponse.json();
@@ -358,106 +608,313 @@
                             tooltip: coord.tooltip || `Описание объекта ${index + 1}`
                         }));
                     } else {
-                        // Если файла нет, используем тестовые данные
                         console.warn('Файл coords.json не найден, используются тестовые данные');
                         checkboxData = [
                             { id: 1, x: 1024, y: 1212, label: "Месторождение железной руды", tooltip: "Богатое месторождение железной руды. Идеально для начала добычи." },
                             { id: 2, x: 1869, y: 788, label: "Залежи меди", tooltip: "Крупные залежи медной руды. Необходимы для производства проводов и электроники." }
                         ];
                     }
-                    
-                    // Загружаем сохраненные данные из data.json
-                    try {
-                        const dataResponse = await fetch('data.json');
-                        if (dataResponse.ok) {
-                            savedData = await dataResponse.json();
-                            console.log('Загружены сохраненные данные:', savedData);
-                        } else {
-                            // Если файла нет, создаем пустой объект
-                            savedData = {};
-                            console.log('Файл data.json не найден, создан пустой объект');
-                        }
-                    } catch (dataError) {
-                        console.warn('Ошибка загрузки data.json:', dataError);
-                        savedData = {};
-                    }
                 } catch (error) {
-                    console.error('Ошибка загрузки данных:', error);
-                    // Используем тестовые данные при ошибке
+                    console.error('Ошибка загрузки координат:', error);
                     checkboxData = [
                         { id: 1, x: 1024, y: 1212, label: "Месторождение железной руды", tooltip: "Богатое месторождение железной руды. Идеально для начала добычи." },
                         { id: 2, x: 1869, y: 788, label: "Залежи меди", tooltip: "Крупные залежи медной руды. Необходимы для производства проводов и электроники." }
                     ];
+                }
+            }
+            
+            // Загрузка конфигурации
+            function loadConfig() {
+                try {
+                    const config = localStorage.getItem(CONFIG_KEY);
+                    if (config) {
+                        jsonBinConfig = JSON.parse(config);
+                        console.log('Загружена конфигурация:', jsonBinConfig);
+                    }
+                } catch (error) {
+                    console.error('Ошибка загрузки конфигурации:', error);
+                }
+            }
+            
+            // Сохранение конфигурации
+            function saveConfig() {
+                try {
+                    localStorage.setItem(CONFIG_KEY, JSON.stringify(jsonBinConfig));
+                    console.log('Конфигурация сохранена:', jsonBinConfig);
+                } catch (error) {
+                    console.error('Ошибка сохранения конфигурации:', error);
+                }
+            }
+            
+            // Загрузка сохраненных данных из localStorage
+            function loadSavedData() {
+                try {
+                    const saved = localStorage.getItem(STORAGE_KEY);
+                    if (saved) {
+                        savedData = JSON.parse(saved);
+                        console.log('Загружены данные из localStorage:', savedData);
+                    } else {
+                        savedData = {};
+                    }
+                } catch (error) {
+                    console.error('Ошибка загрузки данных из localStorage:', error);
                     savedData = {};
                 }
             }
             
-            // Сохранение данных в data.json
-            async function saveData() {
+            // Сохранение данных в localStorage
+            function saveToLocalStorage() {
                 try {
-                    // Собираем данные о отмеченных чекбоксах
-                    const checkboxes = document.querySelectorAll('.checkbox-container input[type="checkbox"]');
-                    const checkedData = {};
+                    const data = collectCheckboxData();
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+                    savedData = data;
                     
-                    checkboxes.forEach(checkbox => {
-                        if (checkbox.checked) {
-                            checkedData[checkbox.dataset.id] = true;
-                        }
-                    });
+                    console.log('Данные сохранены в localStorage:', data);
+                    showNotification('Данные сохранены локально!', false);
                     
-                    console.log('Сохранение данных:', checkedData);
-                    
-                    // Сохраняем данные с помощью FormData (работает на GitHub Pages)
-                    const formData = new FormData();
-                    formData.append('data', JSON.stringify(checkedData));
-                    
-                    // Пытаемся сохранить разными способами
-                    try {
-                        // Способ 1: POST запрос
-                        const response = await fetch('data.json', {
-                            method: 'POST',
-                            body: JSON.stringify(checkedData),
-                            headers: {
-                                'Content-Type': 'application/json'
-                            }
-                        });
-                        
-                        if (response.ok) {
-                            console.log('Данные успешно сохранены (POST)');
-                            showSaveNotification('Данные сохранены!');
-                        } else {
-                            // Способ 2: Используем localStorage как fallback
-                            localStorage.setItem('satisfactoryMapData', JSON.stringify(checkedData));
-                            console.log('Данные сохранены в localStorage');
-                            showSaveNotification('Данные сохранены в localStorage!');
-                        }
-                    } catch (fetchError) {
-                        // Способ 3: localStorage как основной способ
-                        localStorage.setItem('satisfactoryMapData', JSON.stringify(checkedData));
-                        console.log('Данные сохранены в localStorage (fallback)');
-                        showSaveNotification('Данные сохранены в localStorage!');
-                    }
-                    
-                    // Обновляем savedData для будущих загрузок
-                    savedData = checkedData;
+                    // Обновляем время последнего сохранения
+                    updateLastSyncTime('local');
                     
                 } catch (error) {
                     console.error('Ошибка сохранения данных:', error);
-                    showSaveNotification('Ошибка сохранения!', true);
+                    showNotification('Ошибка сохранения!', true);
                 }
             }
             
-            // Показать уведомление о сохранении
-            function showSaveNotification(message, isError = false) {
-                // Удаляем предыдущее уведомление
-                const existingNotification = document.querySelector('.save-notification');
+            // Сбор данных чекбоксов
+            function collectCheckboxData() {
+                const checkboxes = document.querySelectorAll('.checkbox-container input[type="checkbox"]');
+                const data = {};
+                
+                checkboxes.forEach(checkbox => {
+                    data[checkbox.dataset.id] = checkbox.checked;
+                });
+                
+                return data;
+            }
+            
+            // Синхронизация с JSONBin.io
+            async function syncToCloud() {
+                if (!jsonBinConfig.enabled || !jsonBinConfig.apiKey) {
+                    showNotification('Сначала настройте облачное хранилище!', true);
+                    setupCloudBtn.click();
+                    return;
+                }
+                
+                try {
+                    const data = collectCheckboxData();
+                    const binId = jsonBinConfig.binId;
+                    
+                    let response;
+                    
+                    if (binId) {
+                        // Обновляем существующий бинн
+                        response = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-Master-Key': jsonBinConfig.apiKey,
+                                'X-Bin-Versioning': false
+                            },
+                            body: JSON.stringify(data)
+                        });
+                    } else {
+                        // Создаем новый бинн
+                        response = await fetch('https://api.jsonbin.io/v3/b', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-Master-Key': jsonBinConfig.apiKey,
+                                'X-Bin-Name': 'Satisfactory Map Data'
+                            },
+                            body: JSON.stringify(data)
+                        });
+                        
+                        // Сохраняем ID нового бинна
+                        if (response.ok) {
+                            const result = await response.json();
+                            jsonBinConfig.binId = result.metadata.id;
+                            saveConfig();
+                            updateSyncStatus();
+                        }
+                    }
+                    
+                    if (response.ok) {
+                        console.log('Данные синхронизированы с JSONBin.io');
+                        showNotification('Данные синхронизированы с облаком!', false);
+                        
+                        // Обновляем время последней синхронизации
+                        updateLastSyncTime('cloud');
+                        
+                        // Сохраняем также локально
+                        saveToLocalStorage();
+                        
+                    } else {
+                        const errorText = await response.text();
+                        console.error('Ошибка синхронизации:', errorText);
+                        showNotification('Ошибка синхронизации с облаком!', true);
+                    }
+                    
+                } catch (error) {
+                    console.error('Ошибка синхронизации:', error);
+                    showNotification('Ошибка подключения к облаку!', true);
+                }
+            }
+            
+            // Загрузка данных из JSONBin.io
+            async function loadFromCloud() {
+                if (!jsonBinConfig.enabled || !jsonBinConfig.apiKey || !jsonBinConfig.binId) {
+                    showNotification('Сначала настройте облачное хранилище!', true);
+                    setupCloudBtn.click();
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`https://api.jsonbin.io/v3/b/${jsonBinConfig.binId}/latest`, {
+                        headers: {
+                            'X-Master-Key': jsonBinConfig.apiKey
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        const cloudData = result.record;
+                        
+                        // Применяем данные к чекбоксам
+                        applyDataToCheckboxes(cloudData);
+                        
+                        // Сохраняем локально
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify(cloudData));
+                        savedData = cloudData;
+                        
+                        console.log('Данные загружены из облака:', cloudData);
+                        showNotification('Данные загружены из облака!', false);
+                        
+                        // Обновляем время последней синхронизации
+                        updateLastSyncTime('cloud');
+                        
+                        // Обновляем статистику
+                        updateStats();
+                        
+                    } else {
+                        const errorText = await response.text();
+                        console.error('Ошибка загрузки:', errorText);
+                        showNotification('Ошибка загрузки из облака!', true);
+                    }
+                    
+                } catch (error) {
+                    console.error('Ошибка загрузки:', error);
+                    showNotification('Ошибка подключения к облаку!', true);
+                }
+            }
+            
+            // Применение данных к чекбоксам
+            function applyDataToCheckboxes(data) {
+                const checkboxes = document.querySelectorAll('.checkbox-container input[type="checkbox"]');
+                checkboxes.forEach(checkbox => {
+                    const id = checkbox.dataset.id;
+                    checkbox.checked = !!data[id];
+                });
+            }
+            
+            // Экспорт данных
+            function exportData() {
+                try {
+                    const data = collectCheckboxData();
+                    const jsonString = JSON.stringify(data, null, 2);
+                    
+                    // Создаем blob и ссылку для скачивания
+                    const blob = new Blob([jsonString], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `satisfactory-map-data-${new Date().toISOString().split('T')[0]}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    
+                    showNotification('Данные экспортированы!', false);
+                    
+                } catch (error) {
+                    console.error('Ошибка экспорта данных:', error);
+                    showNotification('Ошибка экспорта!', true);
+                }
+            }
+            
+            // Импорт данных
+            function importData(jsonString) {
+                try {
+                    const importedData = JSON.parse(jsonString);
+                    applyDataToCheckboxes(importedData);
+                    
+                    // Сохраняем локально
+                    saveToLocalStorage();
+                    
+                    showNotification('Данные успешно импортированы!', false);
+                    
+                } catch (error) {
+                    console.error('Ошибка импорта данных:', error);
+                    showNotification('Ошибка импорта! Проверьте формат данных.', true);
+                }
+            }
+            
+            // Очистка всех отметок
+            function clearAllData() {
+                if (confirm('Вы уверены, что хотите очистить все отметки? Это действие нельзя отменить.')) {
+                    const checkboxes = document.querySelectorAll('.checkbox-container input[type="checkbox"]');
+                    checkboxes.forEach(checkbox => {
+                        checkbox.checked = false;
+                    });
+                    
+                    // Очищаем localStorage
+                    localStorage.removeItem(STORAGE_KEY);
+                    savedData = {};
+                    
+                    updateStats();
+                    showNotification('Все отметки очищены!', false);
+                }
+            }
+            
+            // Обновление статуса синхронизации
+            function updateSyncStatus() {
+                if (jsonBinConfig.enabled && jsonBinConfig.apiKey) {
+                    syncStatusText.textContent = 'Настроено';
+                    syncStatusText.style.color = '#44ff44';
+                    cloudStatusElement.textContent = 'Облако: активно';
+                    
+                    if (jsonBinConfig.binId) {
+                        syncStatusText.textContent += ` (ID: ${jsonBinConfig.binId.substring(0, 8)}...)`;
+                    }
+                } else {
+                    syncStatusText.textContent = 'Не настроено';
+                    syncStatusText.style.color = '#ff4444';
+                    cloudStatusElement.textContent = 'Облако: отключено';
+                }
+            }
+            
+            // Обновление времени последней синхронизации
+            function updateLastSyncTime(type) {
+                const now = new Date();
+                const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const dateString = now.toLocaleDateString();
+                
+                if (type === 'cloud') {
+                    lastSyncElement.textContent = `Последняя синхронизация: ${dateString} ${timeString}`;
+                } else {
+                    lastSyncElement.textContent = `Последнее сохранение: ${dateString} ${timeString}`;
+                }
+            }
+            
+            // Показать уведомление
+            function showNotification(message, isError = false) {
+                const existingNotification = document.querySelector('.notification');
                 if (existingNotification) {
                     existingNotification.remove();
                 }
                 
-                // Создаем новое уведомление
                 const notification = document.createElement('div');
-                notification.className = 'save-notification';
+                notification.className = 'notification';
                 notification.textContent = message;
                 notification.style.cssText = `
                     position: fixed;
@@ -473,7 +930,6 @@
                     animation: fadeInOut 3s ease-in-out;
                 `;
                 
-                // Добавляем стили для анимации
                 const style = document.createElement('style');
                 style.textContent = `
                     @keyframes fadeInOut {
@@ -487,7 +943,6 @@
                 
                 document.body.appendChild(notification);
                 
-                // Удаляем уведомление через 3 секунды
                 setTimeout(() => {
                     if (notification.parentNode) {
                         notification.remove();
@@ -498,31 +953,12 @@
                 }, 3000);
             }
             
-            // Загрузка данных из localStorage
-            function loadFromLocalStorage() {
-                try {
-                    const saved = localStorage.getItem('satisfactoryMapData');
-                    if (saved) {
-                        return JSON.parse(saved);
-                    }
-                } catch (error) {
-                    console.error('Ошибка загрузки из localStorage:', error);
-                }
-                return {};
-            }
-            
             // Создание чекбоксов на карте
             function createCheckboxes() {
-                // Очищаем существующие чекбоксы (кроме изображения)
                 const existingCheckboxes = mapWrapper.querySelectorAll('.checkbox-container');
                 existingCheckboxes.forEach(el => el.remove());
                 
-                // Загружаем данные из localStorage как fallback
-                const localStorageData = loadFromLocalStorage();
-                
-                // Создаем чекбоксы для каждой точки
                 checkboxData.forEach(item => {
-                    // Создаем чекбокс на карте (внутри wrapper, чтобы масштабировался вместе с картой)
                     const checkboxContainer = document.createElement('div');
                     checkboxContainer.className = 'checkbox-container';
                     checkboxContainer.style.left = `${item.x}px`;
@@ -533,9 +969,7 @@
                     checkbox.id = `map-checkbox-${item.id}`;
                     checkbox.dataset.id = item.id;
                     
-                    // Восстанавливаем состояние из сохраненных данных
-                    // Сначала пробуем из data.json, потом из localStorage
-                    if (savedData[item.id] || localStorageData[item.id]) {
+                    if (savedData[item.id]) {
                         checkbox.checked = true;
                     }
                     
@@ -547,15 +981,13 @@
                     checkboxContainer.appendChild(tooltip);
                     mapWrapper.appendChild(checkboxContainer);
                     
-                    // Обработчик изменения чекбокса
                     checkbox.addEventListener('change', function() {
                         updateStats();
                         // Автосохранение при изменении
-                        saveData();
+                        saveToLocalStorage();
                     });
                 });
                 
-                // Обновляем видимость чекбоксов
                 updateCheckboxesVisibility();
             }
             
@@ -588,12 +1020,10 @@
                     return;
                 }
                 
-                // Подсчитываем чекбоксы, которые находятся в видимой области
                 const visibleCheckboxes = Array.from(document.querySelectorAll('.checkbox-container')).filter(container => {
                     const rect = container.getBoundingClientRect();
                     const containerRect = mapContainer.getBoundingClientRect();
                     
-                    // Проверяем, находится ли чекбокс в видимой области
                     return (
                         rect.right >= containerRect.left &&
                         rect.left <= containerRect.right &&
@@ -614,18 +1044,16 @@
             
             // Обновление информации о координатах
             function updateCoordinatesInfo() {
-                // Координаты центра экрана относительно карты
                 const centerX = Math.round((-offsetX + mapContainer.clientWidth / 2) / scale);
                 const centerY = Math.round((-offsetY + mapContainer.clientHeight / 2) / scale);
                 
-                // Ограничиваем координаты размерами карты
                 const boundedX = Math.max(0, Math.min(mapWidth, centerX));
                 const boundedY = Math.max(0, Math.min(mapHeight, centerY));
                 
                 coordinatesElement.textContent = `x: ${boundedX}, y: ${boundedY}`;
             }
             
-            // Ограничение смещения, чтобы карта не выходила за границы контейнера
+            // Ограничение смещения
             function constrainOffset() {
                 const maxOffsetX = mapContainer.clientWidth - mapWidth * scale;
                 const maxOffsetY = mapContainer.clientHeight - mapHeight * scale;
@@ -642,18 +1070,13 @@
                 const mouseX = e.clientX - rect.left;
                 const mouseY = e.clientY - rect.top;
                 
-                // Координаты мыши относительно карты до масштабирования
                 const prevX = (mouseX - offsetX) / scale;
                 const prevY = (mouseY - offsetY) / scale;
                 
-                // Изменение масштаба
                 const delta = e.deltaY > 0 ? 0.9 : 1.1;
                 scale *= delta;
-                
-                // Ограничиваем масштаб
                 scale = Math.max(0.1, Math.min(5, scale));
                 
-                // Корректируем смещение, чтобы точка под курсором оставалась на месте
                 offsetX = mouseX - prevX * scale;
                 offsetY = mouseY - prevY * scale;
                 
@@ -662,11 +1085,9 @@
                 updateCoordinatesInfo();
             });
             
-            // Улучшенные обработчики событий для перетаскивания
-            let dragStart = null;
-            
+            // Обработчики событий для перетаскивания
             mapContainer.addEventListener('mousedown', function(e) {
-                if (e.button === 0) { // Левая кнопка мыши
+                if (e.button === 0) {
                     e.preventDefault();
                     dragStart = {
                         x: e.clientX - offsetX,
@@ -689,7 +1110,6 @@
                 }
             });
             
-            // Отслеживаем отпускание кнопки мыши в любом месте документа
             document.addEventListener('mouseup', function(e) {
                 if (dragStart !== null) {
                     dragStart = null;
@@ -698,16 +1118,8 @@
                 }
             });
             
-            // Предотвращаем контекстное меню при перетаскивании
-            mapContainer.addEventListener('contextmenu', function(e) {
-                if (dragStart !== null) {
-                    e.preventDefault();
-                }
-            });
-            
             // Кнопки управления
             zoomInBtn.addEventListener('click', function() {
-                // Масштабирование относительно центра карты
                 const centerX = mapContainer.clientWidth / 2;
                 const centerY = mapContainer.clientHeight / 2;
                 
@@ -726,7 +1138,6 @@
             });
             
             zoomOutBtn.addEventListener('click', function() {
-                // Масштабирование относительно центра карты
                 const centerX = mapContainer.clientWidth / 2;
                 const centerY = mapContainer.clientHeight / 2;
                 
@@ -746,14 +1157,92 @@
             
             resetViewBtn.addEventListener('click', resetView);
             
-            saveBtn.addEventListener('click', function() {
-                saveData();
+            saveLocalBtn.addEventListener('click', saveToLocalStorage);
+            
+            syncCloudBtn.addEventListener('click', syncToCloud);
+            
+            loadCloudBtn.addEventListener('click', loadFromCloud);
+            
+            exportBtn.addEventListener('click', exportData);
+            
+            importBtn.addEventListener('click', function() {
+                const data = collectCheckboxData();
+                importDataTextarea.value = JSON.stringify(data, null, 2);
+                importModal.style.display = 'flex';
             });
+            
+            setupCloudBtn.addEventListener('click', function() {
+                // Заполняем поля текущими значениями
+                apiKeyInput.value = jsonBinConfig.apiKey || '';
+                binIdInput.value = jsonBinConfig.binId || '';
+                cloudSetupModal.style.display = 'flex';
+            });
+            
+            clearBtn.addEventListener('click', clearAllData);
             
             toggleCheckboxesBtn.addEventListener('click', function() {
                 checkboxesVisible = !checkboxesVisible;
                 updateCheckboxesVisibility();
                 this.textContent = checkboxesVisible ? 'Скрыть метки' : 'Показать метки';
+            });
+            
+            // Обработчики модальных окон
+            cancelCloudSetupBtn.addEventListener('click', function() {
+                cloudSetupModal.style.display = 'none';
+            });
+            
+            saveCloudConfigBtn.addEventListener('click', function() {
+                const apiKey = apiKeyInput.value.trim();
+                const binId = binIdInput.value.trim();
+                
+                if (!apiKey) {
+                    showNotification('Введите API ключ!', true);
+                    return;
+                }
+                
+                jsonBinConfig.apiKey = apiKey;
+                jsonBinConfig.binId = binId;
+                jsonBinConfig.enabled = true;
+                
+                saveConfig();
+                updateSyncStatus();
+                cloudSetupModal.style.display = 'none';
+                
+                showNotification('Настройки облака сохранены!', false);
+                
+                // Пробуем проверить подключение
+                if (binId) {
+                    setTimeout(() => {
+                        loadFromCloud();
+                    }, 1000);
+                }
+            });
+            
+            cancelImportBtn.addEventListener('click', function() {
+                importModal.style.display = 'none';
+            });
+            
+            confirmImportBtn.addEventListener('click', function() {
+                const data = importDataTextarea.value.trim();
+                if (data) {
+                    importData(data);
+                    importModal.style.display = 'none';
+                } else {
+                    showNotification('Введите данные для импорта', true);
+                }
+            });
+            
+            // Закрытие модальных окон при клике вне их
+            cloudSetupModal.addEventListener('click', function(e) {
+                if (e.target === cloudSetupModal) {
+                    cloudSetupModal.style.display = 'none';
+                }
+            });
+            
+            importModal.addEventListener('click', function(e) {
+                if (e.target === importModal) {
+                    importModal.style.display = 'none';
+                }
             });
             
             // Функция сброса вида
@@ -783,31 +1272,33 @@
                 const mouseX = e.clientX - rect.left;
                 const mouseY = e.clientY - rect.top;
                 
-                // Координаты мыши относительно карты
                 const mapX = Math.round((mouseX - offsetX) / scale);
                 const mapY = Math.round((mouseY - offsetY) / scale);
                 
-                // Ограничиваем координаты размерами карты
                 const boundedX = Math.max(0, Math.min(mapWidth, mapX));
                 const boundedY = Math.max(0, Math.min(mapHeight, mapY));
                 
                 coordinatesElement.textContent = `x: ${boundedX}, y: ${boundedY}`;
             });
             
-            // Предотвращаем выделение текста при перетаскивании
-            mapContainer.addEventListener('selectstart', function(e) {
-                if (dragStart !== null) {
-                    e.preventDefault();
-                }
-            });
-            
-            // Обновляем счетчик видимых объектов при перемещении карты
-            mapContainer.addEventListener('mousemove', updateVisibleCount);
-            
             // Автосохранение при закрытии страницы
             window.addEventListener('beforeunload', function() {
-                saveData();
+                saveToLocalStorage();
             });
+            
+            // Периодическая синхронизация с облаком (каждые 5 минут)
+            setInterval(() => {
+                if (jsonBinConfig.enabled && jsonBinConfig.apiKey && jsonBinConfig.binId) {
+                    syncToCloud();
+                }
+            }, 1440 * 60 * 1000); // 5 минут
+            
+            // Проверка облачного хранилища при загрузке
+            setTimeout(() => {
+                if (jsonBinConfig.enabled && jsonBinConfig.apiKey && jsonBinConfig.binId) {
+                    loadFromCloud();
+                }
+            }, 2000);
         });
     </script>
 </body>
